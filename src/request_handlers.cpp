@@ -230,7 +230,10 @@ CQHTTP_REQUEST_HANDLER(set_group_add_request)
     char *flag = cqhttp_get_param(request, "flag");
     char *type = cqhttp_get_param(request, "type");
     bool approve = cqhttp_get_bool_param(request, "approve", true);
-    char *remark = cqhttp_get_param(request, "remark");
+    char *reason = cqhttp_get_param(request, "reason");
+    if (!reason) {
+        reason = cqhttp_get_param(request, "remark"); // for compatibility with v1.1.3 and before
+    }
     int request_type = -1;
     if (strcmp(type, "add") == 0)
         request_type = REQUEST_GROUPADD;
@@ -241,13 +244,13 @@ CQHTTP_REQUEST_HANDLER(set_group_add_request)
                                                  utf8_to_gbk(flag).c_str(),
                                                  request_type,
                                                  approve ? REQUEST_ALLOW : REQUEST_DENY,
-                                                 remark ? utf8_to_gbk(remark).c_str() : NULL);
+                                                 reason ? utf8_to_gbk(reason).c_str() : NULL);
     if (flag)
         free(flag);
     if (type)
         free(type);
-    if (remark)
-        free(remark);
+    if (reason)
+        free(reason);
     return result;
 }
 
@@ -364,7 +367,7 @@ CQHTTP_REQUEST_HANDLER(get_group_member_list)
     int64_t group_id = cqhttp_get_integer_param(request, "group_id", 0);
     if (group_id) {
         string bytes = base64_decode(gbk_to_utf8(CQ_getGroupMemberList(ac, group_id)));
-        if (bytes.size() >= 10 /* minimum valid bytes size */) {
+        if (bytes.size() >= 4 /* minimum valid bytes size */) {
             INIT(bytes);
             int32_t count;
             INTEGER(count); // get number of group members
@@ -438,6 +441,47 @@ CQHTTP_REQUEST_HANDLER(get_stranger_info)
         } else {
             result.retcode = CQHTTP_RETCODE_INVALID_DATA;
         }
+    }
+    return result;
+}
+
+struct raw_group_info {
+    int64_t group_id;
+    string group_name;
+
+    json_t *json() const {
+        json_t *data = json_object();
+        json_object_set_new(data, "group_id", json_integer(group_id));
+        json_object_set_new(data, "group_name", json_string(group_name.c_str()));
+        return data;
+    }
+};
+
+CQHTTP_REQUEST_HANDLER(get_group_list)
+(const struct cqhttp_request &request) {
+    struct cqhttp_result result;
+    string bytes = base64_decode(gbk_to_utf8(CQ_getGroupList(ac)));
+    if (bytes.size() >= 4 /* minimum valid bytes size */) {
+        INIT(bytes);
+        int32_t count;
+        INTEGER(count); // get number of groups
+
+        auto group_list = json_array();
+
+        for (auto i = 0; i < count; i++) {
+            int16_t token_len;
+            INTEGER(token_len); // no use
+
+            struct raw_group_info group_info;
+            INTEGER(group_info.group_id);
+            STRING(group_info.group_name);
+            json_array_append_new(group_list, group_info.json());
+        }
+
+        result.data = group_list;
+        result.retcode = CQHTTP_RETCODE_OK;
+    } else {
+        result.retcode = CQHTTP_RETCODE_INVALID_DATA;
     }
     return result;
 }

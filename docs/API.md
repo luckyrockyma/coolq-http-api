@@ -272,11 +272,11 @@ Authorization: token kSLuTF2GC2Q4q4ugm3
 
 #### 参数
 
-| 字段名       | 数据类型   | 默认值    | 说明                      |
-| --------- | ------ | ------ | ----------------------- |
-| `flag`    | string | -      | 加好友请求的 flag（需从上报的数据中获得） |
-| `approve` | bool   | `true` | 是否同意请求                  |
-| `remark`  | string | 空      | 添加后的好友备注                |
+| 字段名 | 数据类型 | 默认值 | 说明 |
+| ----- | ------- | ----- | --- |
+| `flag` | string | - | 加好友请求的 flag（需从上报的数据中获得） |
+| `approve` | bool | `true` | 是否同意请求 |
+| `remark` | string | 空 | 添加后的好友备注（仅在同意时有效） |
 
 #### 响应数据
 
@@ -286,16 +286,31 @@ Authorization: token kSLuTF2GC2Q4q4ugm3
 
 #### 参数
 
-| 字段名       | 数据类型   | 默认值    | 说明                                       |
-| --------- | ------ | ------ | ---------------------------------------- |
-| `flag`    | string | -      | 加好友请求的 flag（需从上报的数据中获得）                  |
-| `type`    | string | -      | `add` 或 `invite`，请求类型（需要和上报消息中的 `sub_type` 字段相符） |
-| `approve` | bool   | `true` | 是否同意请求／邀请                                |
-| `remark`  | string | 空      | 拒绝理由                                     |
+| 字段名 | 数据类型 | 默认值 | 说明 |
+| ----- | ------- | ----- | --- |
+| `flag` | string | - | 加好友请求的 flag（需从上报的数据中获得） |
+| `type` | string | - | `add` 或 `invite`，请求类型（需要和上报消息中的 `sub_type` 字段相符） |
+| `approve` | bool | `true` | 是否同意请求／邀请 |
+| `reason` | string | 空 | 拒绝理由（仅在拒绝时有效） |
 
 #### 响应数据
 
 无
+
+### `/get_group_list` 获取群列表
+
+#### 参数
+
+无
+
+#### 响应数据
+
+响应内容为 JSON 数组，每个元素如下：
+
+| 字段名 | 数据类型 | 说明 |
+| ----- | ------- | --- |
+| `group_id` | number | 群号 |
+| `group_name` | string | 群名称 |
 
 ### `/get_group_member_info` 获取群成员信息
 
